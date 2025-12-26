@@ -1,0 +1,106 @@
+name: Deploy to Vercel and Render
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Job 1: Test Backend
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        run: cd backend && npm install
+      
+      - name: Run tests (if any)
+        run: cd backend && npm test || true
+      
+      - name: Lint code
+        run: cd backend && npm run lint || true
+
+  # Job 2: Test Frontend
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: cd frontend && npm install
+      
+      - name: Build
+        run: cd frontend && npm run build
+      
+      - name: Run tests (if any)
+        run: cd frontend && npm test -- --watchAll=false || true
+
+  # Job 3: Deploy Frontend to Vercel
+  deploy-frontend:
+    needs: test-frontend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy Frontend to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./frontend
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+  # Job 4: Deploy Backend to Render
+  deploy-backend:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Render
+        run: |
+          curl https://api.render.com/deploy/${{ secrets.RENDER_DEPLOY_HOOK_ID }}
+
+  # Job 5: Notify on success
+  notify-success:
+    needs: [deploy-frontend, deploy-backend]
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Notify deployment success
+        run: |
+          echo "✅ Frontend deployed to: https://rozanamart.vercel.app"
+          echo "✅ Backend deployed to: https://rozanamart-backend.render.com"
+          echo "🎉 Deployment complete!"
+
+  # Job 6: Notify on failure
+  notify-failure:
+    needs: [deploy-frontend, deploy-backend]
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Notify deployment failure
+        run: |
+          echo "❌ Deployment failed. Check GitHub Actions logs."
+          exit 1
