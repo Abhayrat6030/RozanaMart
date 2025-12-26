@@ -127,12 +127,12 @@ Write-Host "Then enter your GitHub information:" -ForegroundColor Cyan
 Write-Host ""
 
 Write-Host "Enter your GitHub username: " -ForegroundColor Cyan -NoNewline
-$username = Read-Host
+Abhayrat6030 = Read-Host
 Write-Host ""
 
 # Step 8: Add remote and push
 Write-Host "Step 8: Connecting to GitHub..." -ForegroundColor Yellow
-$remoteUrl = "https://github.com/$username/rozanamart.git"
+$remoteUrl = "https://github.com/Abhayrat6030/rozanamart.git"
 Write-Host "Remote URL: $remoteUrl" -ForegroundColor White
 Write-Host ""
 
@@ -167,7 +167,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "║           ✅ SUCCESS! Code pushed to GitHub!              ║" -ForegroundColor Green
     Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Green
     Write-Host ""
-    Write-Host "Your repository URL: https://github.com/$username/rozanamart" -ForegroundColor Cyan
+    Write-Host "Your repository URL: https://github.com/Abhayrat6030/rozanamart" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Next steps:" -ForegroundColor Yellow
     Write-Host "1. Go to: https://vercel.com" -ForegroundColor White
